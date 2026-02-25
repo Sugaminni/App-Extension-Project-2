@@ -3,13 +3,27 @@ using UnityEngine;
 
 public class QuickSlotSystem : MonoBehaviour
 {
-    [SerializeField] private InventorySystem inventorySystem;
+    private InventorySystem inventorySystem;
+    private PlayerHealth playerHealth;
 
     // 4 slots, store itemName (null = empty)
     public List<string> quickSlots = new List<string>(4);
 
     private void Awake()
     {
+        // Auto-wire references so AssignToSlot() doesn't throw NullReferenceException
+        if (inventorySystem == null)
+            inventorySystem = FindObjectOfType<InventorySystem>();
+
+        if (playerHealth == null)
+            playerHealth = FindObjectOfType<PlayerHealth>();
+
+        if (inventorySystem == null)
+            Debug.LogError("QuickSlotSystem: InventorySystem not found in scene.");
+
+        if (playerHealth == null)
+            Debug.LogError("QuickSlotSystem: PlayerHealth not found in scene.");
+
         // Ensures 4 slots exist
         if (quickSlots.Count != 4)
         {
@@ -30,6 +44,18 @@ public class QuickSlotSystem : MonoBehaviour
     {
         if (slotIndex < 0 || slotIndex >= 4) return;
 
+        if (inventorySystem == null)
+        {
+            Debug.LogError("AssignToSlot failed: inventorySystem is null.");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(itemName))
+        {
+            Debug.Log("Cannot assign empty itemName.");
+            return;
+        }
+
         // Only allow assigning if the item exists in inventory
         bool exists = inventorySystem.inventory.Exists(i => i.itemName == itemName);
         if (!exists)
@@ -42,9 +68,40 @@ public class QuickSlotSystem : MonoBehaviour
         Debug.Log($"Assigned '{itemName}' to slot {slotIndex + 1}");
     }
 
+    private void ApplyItemEffect(string itemName)
+    {
+        if (playerHealth == null)
+        {
+            Debug.LogError("ApplyItemEffect failed: playerHealth is null.");
+            return;
+        }
+
+        switch (itemName)
+        {
+            case "Health10":
+                playerHealth.Heal(10);
+                break;
+            case "Health20":
+                playerHealth.Heal(20);
+                break;
+            case "Health30":
+                playerHealth.Heal(30);
+                break;
+            default:
+                Debug.Log($"Used item: {itemName} (no effect hooked up yet)");
+                break;
+        }
+    }
+
     public void UseQuickSlot(int slotIndex)
     {
         if (slotIndex < 0 || slotIndex >= 4) return;
+
+        if (inventorySystem == null)
+        {
+            Debug.LogError("UseQuickSlot failed: inventorySystem is null.");
+            return;
+        }
 
         string itemName = quickSlots[slotIndex];
 
@@ -54,6 +111,16 @@ public class QuickSlotSystem : MonoBehaviour
             return;
         }
 
+        // If the item no longer exists in inventory, clear the slot
+        bool exists = inventorySystem.inventory.Exists(i => i.itemName == itemName);
+        if (!exists)
+        {
+            quickSlots[slotIndex] = null;
+            Debug.Log($"'{itemName}' depleted — cleared slot {slotIndex + 1}");
+            return;
+        }
+
+        ApplyItemEffect(itemName);
         inventorySystem.UseItem(itemName);
         inventorySystem.PrintInventory();
 
