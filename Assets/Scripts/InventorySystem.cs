@@ -70,15 +70,12 @@ public class InventorySystem : MonoBehaviour
     }
 
     private void Start()
-{
-    AddItem("Health10");
-    AddItem("Health10");
-    AddItem("RedBullet");
-    AddItem("GreenBullet");
-    AddItem("BlueBullet");
+    {
+        AddItem("Health10", 2);
+        AddItem("RedBullet", 3);
+        AddItem("GreenBullet", 1);
+        AddItem("BlueBullet", 1);
 
-    UseItem("Health10");
-
-    PrintInventory();
-}
+        PrintInventory();
+    }
 }

@@ -55,6 +55,7 @@ public class QuickSlotSystem : MonoBehaviour
         }
 
         inventorySystem.UseItem(itemName);
+        inventorySystem.PrintInventory();
 
         // If the item no longer exists in inventory, clear the slot
         bool stillExists = inventorySystem.inventory.Exists(i => i.itemName == itemName);
@@ -63,5 +64,14 @@ public class QuickSlotSystem : MonoBehaviour
             quickSlots[slotIndex] = null;
             Debug.Log($"'{itemName}' depleted — cleared slot {slotIndex + 1}");
         }
+    }
+
+    private void Start()
+    {
+        // Temp test
+        AssignToSlot(0, "Health10");     // key 1
+        AssignToSlot(1, "RedBullet");    // key 2
+        AssignToSlot(2, "GreenBullet");  // key 3
+        AssignToSlot(3, "BlueBullet");   // key 4
     }
 }
