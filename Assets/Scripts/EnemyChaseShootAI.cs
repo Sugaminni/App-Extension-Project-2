@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 
+[RequireComponent(typeof(NavMeshAgent))]
 public class EnemyChaseShootAI : MonoBehaviour
 {
     public float chaseRange = 10f;
@@ -8,7 +9,7 @@ public class EnemyChaseShootAI : MonoBehaviour
 
     [Header("Shooting")]
     public GameObject bulletPrefab;           // placeholder projectile
-    public Transform shootPoint;             
+    public Transform shootPoint;
     public float bulletSpeed = 20f;
     public float shootCooldown = 1.0f;
 
@@ -19,6 +20,7 @@ public class EnemyChaseShootAI : MonoBehaviour
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
+
         GameObject p = GameObject.FindGameObjectWithTag("Player");
         if (p != null) player = p.transform;
     }
@@ -26,6 +28,7 @@ public class EnemyChaseShootAI : MonoBehaviour
     private void Update()
     {
         if (player == null) return;
+        if (agent == null) return;
 
         float d = Vector3.Distance(transform.position, player.position);
 
@@ -44,7 +47,7 @@ public class EnemyChaseShootAI : MonoBehaviour
         }
 
         // Shoot <= 5
-        agent.ResetPath();
+        if (agent.hasPath) agent.ResetPath();
         FaceTarget(player.position);
 
         if (Time.time >= nextShootTime)
@@ -56,12 +59,23 @@ public class EnemyChaseShootAI : MonoBehaviour
 
     private void Shoot()
     {
-        if (bulletPrefab == null || shootPoint == null) return;
+        if (bulletPrefab == null || player == null) return;
 
-        GameObject bullet = Instantiate(bulletPrefab, shootPoint.position, shootPoint.rotation);
+        // Use a stable spawn position in front of the enemy
+        Vector3 spawnOffset = new Vector3(0f, 0.2f, 0.8f);
+        Vector3 spawnPos = transform.TransformPoint(spawnOffset);
+
+        GameObject bullet = Instantiate(bulletPrefab, spawnPos, Quaternion.identity);
         Rigidbody rb = bullet.GetComponent<Rigidbody>();
+
         if (rb != null)
-            rb.velocity = shootPoint.forward * bulletSpeed;
+        {
+            Vector3 target = player.position;
+            target.y = spawnPos.y;   // keep bullet travel flat
+
+            Vector3 dir = (target - spawnPos).normalized;
+            rb.linearVelocity = dir * bulletSpeed;
+        }
 
         // Debug message for testing
         Debug.Log($"{name} shot at player");

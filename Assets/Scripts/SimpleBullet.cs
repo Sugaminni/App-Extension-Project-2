@@ -2,18 +2,22 @@ using UnityEngine;
 
 public class SimpleBullet : MonoBehaviour
 {
-    public float lifeSeconds = 10f;
+    public int damage = 10;
+    public float lifeTime = 3f;
 
     private void Start()
     {
-        Destroy(gameObject, lifeSeconds);
+        Destroy(gameObject, lifeTime);
     }
 
-    private void OnCollisionEnter(Collision collision)
+    private void OnTriggerEnter(Collider other)
     {
-        // If the bullet hits the player, damage them
-        PlayerHealth ph = collision.collider.GetComponent<PlayerHealth>();
-        if (ph != null) ph.TakeDamage(5);
+        if (other.CompareTag("Player"))
+        {
+            PlayerHealth ph = other.GetComponent<PlayerHealth>();
+            if (ph != null)
+                ph.TakeDamage(damage);
+        }
 
         Destroy(gameObject);
     }

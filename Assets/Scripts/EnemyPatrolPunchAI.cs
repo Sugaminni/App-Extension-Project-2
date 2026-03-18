@@ -31,8 +31,14 @@ public class EnemyPatrolPunchAI : MonoBehaviour
     private void Update()
     {
         if (player == null) return;
+        if (agent == null) return;
 
-        float d = Vector3.Distance(transform.position, player.position);
+        Vector3 flatEnemyPos = transform.position;
+        Vector3 flatPlayerPos = player.position;
+        flatEnemyPos.y = 0f;
+        flatPlayerPos.y = 0f;
+
+        float d = Vector3.Distance(flatEnemyPos, flatPlayerPos);
 
         if (d > chaseRange)
         {
@@ -44,7 +50,7 @@ public class EnemyPatrolPunchAI : MonoBehaviour
         if (d <= punchRange)
         {
             // Punch <= 2
-            agent.ResetPath();
+            if (agent.hasPath) agent.ResetPath();
             FaceTarget(player.position);
 
             if (Time.time >= nextPunchTime)
@@ -55,21 +61,25 @@ public class EnemyPatrolPunchAI : MonoBehaviour
             return;
         }
 
-        // Between 2 and 10: keep patrolling
-        PatrolTick();
+        // Between 2 and 10: move toward player
+        agent.SetDestination(player.position);
+        FaceTarget(player.position);
     }
 
     private void PatrolTick()
     {
         if (waypoints == null || waypoints.Length == 0) return;
+        if (agent == null) return;
 
-        if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+        // Move to next waypoint once close enough to the current one
+        if (!agent.pathPending && agent.remainingDistance <= 0.2f)
             GoToNextWaypoint();
     }
 
     private void GoToNextWaypoint()
     {
         if (waypoints == null || waypoints.Length == 0) return;
+        if (agent == null) return;
 
         agent.SetDestination(waypoints[wpIndex].position);
         wpIndex = (wpIndex + 1) % waypoints.Length;
