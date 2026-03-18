@@ -12,21 +12,25 @@ public class PlayerHealth : MonoBehaviour
     public void Heal(int amount)
     {
         if (amount <= 0) return;
+        if (currentHealth <= 0) return;
 
         int before = currentHealth;
         currentHealth = Mathf.Min(maxHealth, currentHealth + amount);
-
-        Debug.Log($"Healed {amount}. Health: {before} -> {currentHealth}");
     }
 
     // Damage the player by a certain amount, without going below 0
     public void TakeDamage(int amount)
     {
         if (amount <= 0) return;
+        if (currentHealth <= 0) return;
 
         int before = currentHealth;
         currentHealth = Mathf.Max(0, currentHealth - amount);
 
-        Debug.Log($"Took {amount} damage. Health: {before} -> {currentHealth}");
+        if (currentHealth == 0)
+        {
+            Debug.Log("Player died");
+            gameObject.SetActive(false);
+        }
     }
 }
