@@ -3502,7 +3502,7 @@ Transform:
   m_GameObject: {fileID: 1027912048}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6.15, y: 2, z: 35.09}
+  m_LocalPosition: {x: 7.03, y: 2, z: 36.07}
   m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -5973,6 +5973,8 @@ GameObject:
   - component: {fileID: 2029870247}
   - component: {fileID: 2029870246}
   - component: {fileID: 2029870245}
+  - component: {fileID: 2029870250}
+  - component: {fileID: 2029870249}
   m_Layer: 0
   m_Name: Ally
   m_TagString: Enemy
@@ -6074,6 +6076,48 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2029870249
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2029870244}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb3344065704e4843bf6324aa077426f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FriendFollowAssistAI
+  followDistance: 2.5
+  assistTriggerRangeFromPlayer: 5
+  attackDistance: 4
+  attackCooldown: 1
+  assistDamage: 10
+  bulletPrefab: {fileID: 714200995918325633, guid: 0875dbc6dc69de142b5fe4d8ebe717b9, type: 3}
+  bulletSpeed: 20
+  shootOffset: {x: 0, y: 0.5, z: 0.8}
+--- !u!195 &2029870250
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2029870244}
+  m_Enabled: 1
+  m_AgentTypeID: 0
+  m_Radius: 0.5
+  m_Speed: 3.5
+  m_Acceleration: 8
+  avoidancePriority: 50
+  m_AngularSpeed: 120
+  m_StoppingDistance: 0
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 2
+  m_BaseOffset: 1
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4
 --- !u!1001 &2051461022
 PrefabInstance:
   m_ObjectHideFlags: 0
