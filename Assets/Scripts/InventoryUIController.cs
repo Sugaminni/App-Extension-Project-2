@@ -1,101 +1,115 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 public class InventoryUIController : MonoBehaviour
 {
-    public GameObject inventoryPanel;
-    public Transform slotsParent;
-    public InventorySlotUI slotPrefab;
+    [SerializeField] private GameObject inventoryPanel;
+    [SerializeField] private InventorySlotUI[] inventorySlots;
 
     private InventorySystem inventorySystem;
-    private readonly List<InventorySlotUI> spawnedSlots = new List<InventorySlotUI>();
+    private QuickSlotSystem quickSlotSystem;
+
+    public bool IsOpen => inventoryPanel != null && inventoryPanel.activeSelf;
 
     private void Awake()
     {
         inventorySystem = FindObjectOfType<InventorySystem>();
+        quickSlotSystem = FindObjectOfType<QuickSlotSystem>();
 
-        if (inventoryPanel != null)
-            inventoryPanel.SetActive(false);
-        else
+        if (inventoryPanel == null)
             Debug.LogError("InventoryUIController: inventoryPanel not assigned.");
 
-        if (inventorySystem != null)
-            inventorySystem.OnInventoryChanged += Refresh;
-        else
+        if (inventorySystem == null)
             Debug.LogError("InventoryUIController: InventorySystem not found.");
+
+        if (quickSlotSystem == null)
+            Debug.LogError("InventoryUIController: QuickSlotSystem not found.");
+
+        if (inventorySystem != null)
+            inventorySystem.OnInventoryChanged += RefreshInventoryUI;
+    }
+
+    private void Start()
+    {
+        if (inventoryPanel != null)
+            inventoryPanel.SetActive(false);
+
+        SetCursorState(false);
+        RefreshInventoryUI();
     }
 
     private void OnDestroy()
     {
         if (inventorySystem != null)
-            inventorySystem.OnInventoryChanged -= Refresh;
+            inventorySystem.OnInventoryChanged -= RefreshInventoryUI;
     }
 
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.I))
         {
-            Debug.Log("I detected");
-
-            if (inventoryPanel == null)
-            {
-                Debug.Log("inventoryPanel is NULL");
-                return;
-            }
-
-            bool current = inventoryPanel.activeSelf;
-            inventoryPanel.SetActive(!current);
-
-            Debug.Log("Panel active now: " + inventoryPanel.activeSelf);
-
-            if (!current)
-                Refresh();
+            ToggleInventory();
         }
     }
 
-    public void Refresh()
+    public void ToggleInventory()
     {
-        if (inventorySystem == null || slotsParent == null || slotPrefab == null) return;
+        if (inventoryPanel == null)
+            return;
+
+        bool nextState = !inventoryPanel.activeSelf;
+        inventoryPanel.SetActive(nextState);
+        SetCursorState(nextState);
+
+        if (nextState)
+            RefreshInventoryUI();
+    }
+
+    private void SetCursorState(bool inventoryOpen)
+    {
+        Cursor.visible = inventoryOpen;
+        Cursor.lockState = inventoryOpen ? CursorLockMode.None : CursorLockMode.Locked;
+    }
+
+    public void OnInventoryItemClicked(string itemName)
+    {
+        if (quickSlotSystem == null)
+        {
+            Debug.LogError("QuickSlotSystem missing.");
+            return;
+        }
+
+        Debug.Log("ASSIGN ITEM -> " + itemName + " INTO SLOT " + (quickSlotSystem.SelectedSlotIndex + 1));
+        quickSlotSystem.AssignToSelectedSlot(itemName);
+    }
+
+    public void RefreshInventoryUI()
+    {
+        if (inventorySystem == null || inventorySlots == null || inventorySlots.Length == 0)
+            return;
 
         int uniqueCount = inventorySystem.inventory.Count;
+        int visibleSlots = uniqueCount <= 6 ? 6 : Mathf.Clamp(uniqueCount, 6, 12);
 
-        // Determine how many slots to show based on unique item count  
-        int slotCount = (uniqueCount <= 6) ? 6 : uniqueCount;
-
-        slotCount = Mathf.Clamp(slotCount, 6, 12);
-
-        EnsureSlotObjects(slotCount);
-
-        // Fill slots with items in order
-        for (int i = 0; i < slotCount; i++)
+        for (int i = 0; i < inventorySlots.Length; i++)
         {
+            if (inventorySlots[i] == null)
+                continue;
+
+            bool shouldBeVisible = i < visibleSlots;
+            inventorySlots[i].gameObject.SetActive(shouldBeVisible);
+
+            if (!shouldBeVisible)
+                continue;
+
             if (i < uniqueCount)
             {
-                var item = inventorySystem.inventory[i];
-                spawnedSlots[i].SetItem(item.itemName, item.quantity);
+                InventoryItem item = inventorySystem.inventory[i];
+                inventorySlots[i].SetItem(item.itemName, item.quantity);
             }
             else
             {
-                spawnedSlots[i].SetEmpty();
+                inventorySlots[i].SetEmpty();
             }
-        }
-    }
-
-    private void EnsureSlotObjects(int needed)
-    {
-        // spawn more
-        while (spawnedSlots.Count < needed)
-        {
-            var slot = Instantiate(slotPrefab, slotsParent);
-            spawnedSlots.Add(slot);
-        }
-
-        // delete extra
-        while (spawnedSlots.Count > needed)
-        {
-            var last = spawnedSlots[spawnedSlots.Count - 1];
-            spawnedSlots.RemoveAt(spawnedSlots.Count - 1);
-            Destroy(last.gameObject);
         }
     }
 }

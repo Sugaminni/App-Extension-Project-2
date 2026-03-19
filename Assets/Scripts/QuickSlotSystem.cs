@@ -1,35 +1,29 @@
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 public class QuickSlotSystem : MonoBehaviour
 {
-    private InventorySystem inventorySystem;
-    private PlayerHealth playerHealth;
+    public event Action OnQuickSlotsChanged;
 
-    // 4 slots, store itemName (null = empty)
-    public List<string> quickSlots = new List<string>(4);
+    [SerializeField] private InventorySystem inventorySystem;
+    [SerializeField] private PlayerHealth playerHealth;
+    [SerializeField] private PlayerShoot playerShoot;
+
+    private string[] quickSlots = new string[4];
+    private int selectedSlotIndex = 0;
+
+    public int SelectedSlotIndex => selectedSlotIndex;
 
     private void Awake()
     {
-        // Auto-wire references so AssignToSlot() doesn't throw NullReferenceException
         if (inventorySystem == null)
             inventorySystem = FindObjectOfType<InventorySystem>();
 
         if (playerHealth == null)
             playerHealth = FindObjectOfType<PlayerHealth>();
 
-        if (inventorySystem == null)
-            Debug.LogError("QuickSlotSystem: InventorySystem not found in scene.");
-
-        if (playerHealth == null)
-            Debug.LogError("QuickSlotSystem: PlayerHealth not found in scene.");
-
-        // Ensures 4 slots exist
-        if (quickSlots.Count != 4)
-        {
-            quickSlots.Clear();
-            for (int i = 0; i < 4; i++) quickSlots.Add(null);
-        }
+        if (playerShoot == null)
+            playerShoot = FindObjectOfType<PlayerShoot>();
     }
 
     private void Update()
@@ -40,105 +34,82 @@ public class QuickSlotSystem : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha4)) UseQuickSlot(3);
     }
 
-    public void AssignToSlot(int slotIndex, string itemName)
+    public void SelectSlot(int slotIndex)
     {
-        if (slotIndex < 0 || slotIndex >= 4) return;
-
-        if (inventorySystem == null)
-        {
-            Debug.LogError("AssignToSlot failed: inventorySystem is null.");
-            return;
-        }
-
-        if (string.IsNullOrEmpty(itemName))
-        {
-            Debug.Log("Cannot assign empty itemName.");
-            return;
-        }
-
-        // Only allow assigning if the item exists in inventory
-        bool exists = inventorySystem.inventory.Exists(i => i.itemName == itemName);
-        if (!exists)
-        {
-            Debug.Log($"Cannot assign '{itemName}' — not in inventory.");
-            return;
-        }
-
-        quickSlots[slotIndex] = itemName;
-        Debug.Log($"Assigned '{itemName}' to slot {slotIndex + 1}");
+        selectedSlotIndex = slotIndex;
+        Debug.Log("Selected quick slot: " + (slotIndex + 1));
     }
 
-    private void ApplyItemEffect(string itemName)
+    public void AssignToSelectedSlot(string itemName)
     {
-        if (playerHealth == null)
-        {
-            Debug.LogError("ApplyItemEffect failed: playerHealth is null.");
-            return;
-        }
-
-        switch (itemName)
-        {
-            case "Health10":
-                playerHealth.Heal(10);
-                break;
-            case "Health20":
-                playerHealth.Heal(20);
-                break;
-            case "Health30":
-                playerHealth.Heal(30);
-                break;
-            default:
-                Debug.Log($"Used item: {itemName} (no effect hooked up yet)");
-                break;
-        }
+        quickSlots[selectedSlotIndex] = itemName;
+        Debug.Log($"Assigned {itemName} to quick slot {selectedSlotIndex + 1}");
+        OnQuickSlotsChanged?.Invoke();
     }
 
     public void UseQuickSlot(int slotIndex)
     {
-        if (slotIndex < 0 || slotIndex >= 4) return;
-
-        if (inventorySystem == null)
-        {
-            Debug.LogError("UseQuickSlot failed: inventorySystem is null.");
-            return;
-        }
-
         string itemName = quickSlots[slotIndex];
 
         if (string.IsNullOrEmpty(itemName))
         {
-            Debug.Log($"Slot {slotIndex + 1} is empty.");
+            Debug.Log("Slot empty");
             return;
         }
 
-        // If the item no longer exists in inventory, clear the slot
-        bool exists = inventorySystem.inventory.Exists(i => i.itemName == itemName);
-        if (!exists)
+        if (inventorySystem == null || !inventorySystem.HasItem(itemName))
         {
             quickSlots[slotIndex] = null;
-            Debug.Log($"'{itemName}' depleted — cleared slot {slotIndex + 1}");
+            OnQuickSlotsChanged?.Invoke();
             return;
         }
 
+        // Apply effect first
         ApplyItemEffect(itemName);
-        inventorySystem.UseItem(itemName);
-        inventorySystem.PrintInventory();
 
-        // If the item no longer exists in inventory, clear the slot
-        bool stillExists = inventorySystem.inventory.Exists(i => i.itemName == itemName);
-        if (!stillExists)
+        // Only consume actual consumables
+        if (IsConsumable(itemName))
         {
-            quickSlots[slotIndex] = null;
-            Debug.Log($"'{itemName}' depleted — cleared slot {slotIndex + 1}");
+            inventorySystem.UseItem(itemName, 1);
+
+            if (!inventorySystem.HasItem(itemName))
+            {
+                quickSlots[slotIndex] = null;
+            }
         }
+
+        OnQuickSlotsChanged?.Invoke();
     }
 
-    private void Start()
+    private void ApplyItemEffect(string itemName)
     {
-        // Temp test
-        AssignToSlot(0, "Health10");     // key 1
-        AssignToSlot(1, "RedBullet");    // key 2
-        AssignToSlot(2, "GreenBullet");  // key 3
-        AssignToSlot(3, "BlueBullet");   // key 4
+        if (itemName == "Health10") playerHealth.Heal(10);
+        else if (itemName == "Health20") playerHealth.Heal(20);
+        else if (itemName == "Health30") playerHealth.Heal(30);
+        else if (itemName == "RedBullet" && playerShoot != null) playerShoot.SetBulletType("RedBullet");
+        else if (itemName == "GreenBullet" && playerShoot != null) playerShoot.SetBulletType("GreenBullet");
+        else if (itemName == "BlueBullet" && playerShoot != null) playerShoot.SetBulletType("BlueBullet");
+    }
+
+    private bool IsConsumable(string itemName)
+    {
+        return itemName == "Health10"
+            || itemName == "Health20"
+            || itemName == "Health30";
+    }
+
+    public string GetItemInSlot(int index)
+    {
+        return quickSlots[index];
+    }
+
+    public int GetQuantityInSlot(int index)
+    {
+        if (inventorySystem == null) return 0;
+
+        string item = quickSlots[index];
+        if (string.IsNullOrEmpty(item)) return 0;
+
+        return inventorySystem.GetItemQuantity(item);
     }
 }

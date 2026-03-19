@@ -6,14 +6,21 @@ public class PlayerLook : MonoBehaviour
     public float mouseSensitivity = 100f;
 
     private float xRotation = 0f;
+    private InventoryUIController inventoryUI;
 
     private void Start()
     {
+        inventoryUI = FindObjectOfType<InventoryUIController>();
+
         Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     private void Update()
     {
+        if (inventoryUI != null && inventoryUI.IsOpen)
+            return;
+
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 

@@ -17,6 +17,13 @@ public class InventorySystem : MonoBehaviour
     // Adds Item
     public bool AddItem(string itemName, int amount = 1)
     {
+        // basic validation
+        if (string.IsNullOrWhiteSpace(itemName))
+        {
+            Debug.LogWarning("Cannot add item with empty name.");
+            return false;
+        }
+
         if (amount <= 0)
         {
             Debug.Log("Amount must be greater than 0.");
@@ -51,6 +58,12 @@ public class InventorySystem : MonoBehaviour
     // Use/Remove Item
     public bool UseItem(string itemName, int amount = 1)
     {
+        if (string.IsNullOrWhiteSpace(itemName))
+        {
+            Debug.LogWarning("Cannot use item with empty name.");
+            return false;
+        }
+
         if (amount <= 0)
         {
             Debug.Log("Amount must be greater than 0.");
@@ -89,6 +102,13 @@ public class InventorySystem : MonoBehaviour
         }
     }
 
+    // Helper method 
+    public bool HasItem(string itemName)
+    {
+        InventoryItem item = inventory.Find(i => i.itemName == itemName);
+        return item != null && item.quantity > 0;
+    }
+
     // Debug method to print inventory
     public void PrintInventory()
     {
@@ -102,16 +122,37 @@ public class InventorySystem : MonoBehaviour
         Debug.Log("-----------------------");
     }
 
+    public int GetItemQuantity(string itemName)
+    {
+        foreach (var item in inventory)
+        {
+            if (item.itemName == itemName)
+                return item.quantity;
+        }
+
+        return 0;
+    }
+
     private void Start()
     {
         if (!debugFillInventory) return;
 
+        // EXISTING ITEMS
         AddItem("Health10", 2);
         AddItem("Health20", 1);
         AddItem("Health30", 1);
-        AddItem("RedBullet", 3);
+        AddItem("RedBullet", 1);
         AddItem("GreenBullet", 1);
         AddItem("BlueBullet", 1);
+
+        // NEW ITEMS (for testing)
+        AddItem("Medkit", 1);
+        AddItem("Bandage", 2);
+        AddItem("SpeedBoost", 1);
+        AddItem("DamageBoost", 1);
+        AddItem("Shield", 1);
+        AddItem("ArmorBoost", 1);
+        AddItem("AmmoPack", 1);
 
         PrintInventory();
     }
