@@ -14,19 +14,21 @@ public class PlayerShoot : MonoBehaviour
 
     private GameObject currentBulletPrefab;
     private float nextShootTime;
-    private InventoryUIController inventoryUI;
 
     private void Start()
     {
+        // Default bullet type
         currentBulletPrefab = redBulletPrefab;
-        inventoryUI = FindObjectOfType<InventoryUIController>();
+
+        if (PlayerStats.Instance != null)
+        {
+            PlayerStats.Instance.damageMultiplier = GetBulletDamage("RedBullet");
+            PlayerStats.Instance.SaveStats();
+        }
     }
 
     private void Update()
     {
-        if (inventoryUI != null && inventoryUI.IsOpen)
-            return;
-
         if (Input.GetMouseButton(0) && Time.time >= nextShootTime)
         {
             nextShootTime = Time.time + shootCooldown;
@@ -34,12 +36,19 @@ public class PlayerShoot : MonoBehaviour
         }
     }
 
+    // Simple shoot method that spawns a bullet and gives it velocity
     private void Shoot()
     {
         if (currentBulletPrefab == null) return;
 
         Vector3 spawnPos = transform.TransformPoint(shootOffset);
         GameObject bullet = Instantiate(currentBulletPrefab, spawnPos, Quaternion.identity);
+
+        PlayerBullet pb = bullet.GetComponent<PlayerBullet>();
+        if (pb != null && PlayerStats.Instance != null)
+        {
+            pb.damage = Mathf.RoundToInt(PlayerStats.Instance.damageMultiplier);
+        }
 
         Rigidbody rb = bullet.GetComponent<Rigidbody>();
         if (rb != null)
@@ -49,6 +58,7 @@ public class PlayerShoot : MonoBehaviour
         }
     }
 
+    // Switch the currently equipped bullet type
     public void SetBulletType(string bulletName)
     {
         switch (bulletName)
@@ -70,7 +80,28 @@ public class PlayerShoot : MonoBehaviour
 
             default:
                 Debug.Log($"Unknown bullet type: {bulletName}");
-                break;
+                return;
+        }
+
+        if (PlayerStats.Instance != null)
+        {
+            PlayerStats.Instance.damageMultiplier = GetBulletDamage(bulletName);
+            PlayerStats.Instance.SaveStats();
+        }
+    }
+
+    private float GetBulletDamage(string bulletName)
+    {
+        switch (bulletName)
+        {
+            case "RedBullet":
+                return 10f;
+            case "GreenBullet":
+                return 20f;
+            case "BlueBullet":
+                return 30f;
+            default:
+                return 10f;
         }
     }
 }

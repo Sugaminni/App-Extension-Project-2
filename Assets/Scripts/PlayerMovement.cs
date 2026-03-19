@@ -4,7 +4,7 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement")]
-    public float moveSpeed = 6f;
+    public float moveSpeed = 9f;
     public float gravity = -20f;
     public float jumpHeight = 1.2f;
 
@@ -17,8 +17,25 @@ public class PlayerMovement : MonoBehaviour
         controller = GetComponent<CharacterController>();
     }
 
+    private void Start()
+    {
+        // Sync display-only speed stat at startup
+        if (PlayerStats.Instance != null && PlayerStats.Instance.speed != moveSpeed)
+        {
+            PlayerStats.Instance.speed = moveSpeed;
+            PlayerStats.Instance.SaveStats();
+        }
+    }
+
     private void Update()
     {
+        // Keep speed stat synced with actual movement speed (display only)
+        if (PlayerStats.Instance != null && PlayerStats.Instance.speed != moveSpeed)
+        {
+            PlayerStats.Instance.speed = moveSpeed;
+            PlayerStats.Instance.SaveStats();
+        }
+
         // Ground check
         isGrounded = controller.isGrounded;
 

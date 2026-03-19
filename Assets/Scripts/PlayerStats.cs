@@ -8,7 +8,7 @@ public class PlayerStats : MonoBehaviour
     public int currentHealth;
 
     public float damageMultiplier = 1f;
-    public float speed = 5f;
+    public float speed = 9f;
     public int kills = 0;
 
     private void Awake()
@@ -52,7 +52,7 @@ public class PlayerStats : MonoBehaviour
     {
         currentHealth = PlayerPrefs.GetInt("Health", maxHealth);
         damageMultiplier = PlayerPrefs.GetFloat("Damage", 1f);
-        speed = PlayerPrefs.GetFloat("Speed", 5f);
+        speed = PlayerPrefs.GetFloat("Speed", 9f);
         kills = PlayerPrefs.GetInt("Kills", 0);
     }
 }

@@ -10,6 +10,8 @@ public class StatsUI : MonoBehaviour
     {
         if (statsPanel != null)
             statsPanel.SetActive(false);
+
+        UpdateStatsText();
     }
 
     private void Update()
@@ -17,17 +19,38 @@ public class StatsUI : MonoBehaviour
         // Toggle UI
         if (Input.GetKeyDown(KeyCode.Tab))
         {
-            statsPanel.SetActive(!statsPanel.activeSelf);
+            if (statsPanel != null)
+            {
+                statsPanel.SetActive(!statsPanel.activeSelf);
+
+                if (statsPanel.activeSelf)
+                    UpdateStatsText();
+            }
         }
 
         // only update stats if UI is active
-        if (!statsPanel.activeSelf)
+        if (statsPanel == null || !statsPanel.activeSelf)
             return;
+
+        UpdateStatsText();
+    }
+
+    private void UpdateStatsText()
+    {
+        if (statsText == null)
+        {
+            Debug.LogError("StatsUI: statsText is not assigned.");
+            return;
+        }
+
+        if (PlayerStats.Instance == null)
+        {
+            Debug.LogError("StatsUI: PlayerStats.Instance is null.");
+            statsText.text = "PlayerStats missing";
+            return;
+        }
 
         var stats = PlayerStats.Instance;
-
-        if (stats == null || statsText == null)
-            return;
 
         statsText.text =
             "Health: " + stats.currentHealth + "\n" +
