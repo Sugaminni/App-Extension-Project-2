@@ -51,6 +51,7 @@ public class InventoryUIController : MonoBehaviour
         }
     }
 
+    // Toggle the inventory panel and cursor state, and refresh UI if opening
     public void ToggleInventory()
     {
         if (inventoryPanel == null)
@@ -70,6 +71,7 @@ public class InventoryUIController : MonoBehaviour
         Cursor.lockState = inventoryOpen ? CursorLockMode.None : CursorLockMode.Locked;
     }
 
+    // Called by InventorySlotUI when an item is clicked, to assign it to the currently selected quick slot
     public void OnInventoryItemClicked(string itemName)
     {
         if (quickSlotSystem == null)
@@ -82,6 +84,7 @@ public class InventoryUIController : MonoBehaviour
         quickSlotSystem.AssignToSelectedSlot(itemName);
     }
 
+    // Refresh the inventory UI to show current items and quantities, and adjust visible slots based on unique item count
     public void RefreshInventoryUI()
     {
         if (inventorySystem == null || inventorySlots == null || inventorySlots.Length == 0)

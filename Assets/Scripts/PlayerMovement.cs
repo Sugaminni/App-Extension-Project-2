@@ -29,7 +29,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        // Keep speed stat synced with actual movement speed (display only)
+        // Keep speed stat synced with actual movement speed 
         if (PlayerStats.Instance != null && PlayerStats.Instance.speed != moveSpeed)
         {
             PlayerStats.Instance.speed = moveSpeed;

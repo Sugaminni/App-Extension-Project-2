@@ -10,6 +10,7 @@ public class SimpleBullet : MonoBehaviour
         Destroy(gameObject, lifeTime);
     }
 
+    // When the bullet collides with another collider, check if it's the player and apply damage, then destroy the bullet
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))

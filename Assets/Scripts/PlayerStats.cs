@@ -39,6 +39,7 @@ public class PlayerStats : MonoBehaviour
         SaveStats();
     }
 
+    // Save stats to PlayerPrefs for persistence
     public void SaveStats()
     {
         PlayerPrefs.SetInt("Health", currentHealth);
@@ -48,6 +49,7 @@ public class PlayerStats : MonoBehaviour
         PlayerPrefs.Save();
     }
 
+    // Load stats from PlayerPrefs
     public void LoadStats()
     {
         currentHealth = PlayerPrefs.GetInt("Health", maxHealth);

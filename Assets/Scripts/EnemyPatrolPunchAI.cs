@@ -87,7 +87,7 @@ public class EnemyPatrolPunchAI : MonoBehaviour
 
     private void Punch()
     {
-        // Testing: try to damage PlayerHealth if present
+        // Try to damage PlayerHealth if present
         PlayerHealth ph = player.GetComponent<PlayerHealth>();
         if (ph != null) ph.TakeDamage(punchDamage);
 

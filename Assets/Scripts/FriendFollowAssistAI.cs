@@ -113,6 +113,7 @@ public class FriendFollowAssistAI : MonoBehaviour
         }
     }
 
+    // Rotate to face the target position, ignoring vertical difference
     private void FaceTarget(Vector3 targetPos)
     {
         Vector3 dir = targetPos - transform.position;

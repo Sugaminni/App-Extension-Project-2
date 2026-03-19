@@ -81,6 +81,7 @@ public class EnemyChaseShootAI : MonoBehaviour
         Debug.Log($"{name} shot at player");
     }
 
+    // Rotate to face the target position, ignoring vertical difference
     private void FaceTarget(Vector3 targetPos)
     {
         Vector3 dir = (targetPos - transform.position);

@@ -26,6 +26,7 @@ public class InventorySlotUI : MonoBehaviour
         }
     }
 
+    // Initialize the inventory slot with a reference to the InventoryUIController, and set up the button click listener
     public void Initialize(InventoryUIController controller)
     {
         inventoryUI = controller;
@@ -40,6 +41,7 @@ public class InventorySlotUI : MonoBehaviour
         }
     }
 
+    // Set the inventory slot to an empty state, clearing any item information and making it non-interactable
     public void SetEmpty()
     {
         isEmpty = true;
@@ -52,6 +54,7 @@ public class InventorySlotUI : MonoBehaviour
             button.interactable = false;
     }
 
+    // Set the inventory slot to display a specific item and quantity, and make it interactable
     public void SetItem(string itemName, int qty)
     {
         isEmpty = false;
@@ -64,6 +67,7 @@ public class InventorySlotUI : MonoBehaviour
             button.interactable = true;
     }
 
+    // Called when the inventory slot button is clicked. If the slot is not empty, it will notify the InventoryUIController to assign this item to the currently selected quick slot.
     private void OnSlotClicked()
     {
         if (isEmpty || string.IsNullOrEmpty(currentItemName))

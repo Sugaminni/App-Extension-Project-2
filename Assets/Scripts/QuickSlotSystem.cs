@@ -26,6 +26,7 @@ public class QuickSlotSystem : MonoBehaviour
             playerShoot = FindObjectOfType<PlayerShoot>();
     }
 
+    // Listen for number key presses to use quick slots 1-4
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Alpha1)) UseQuickSlot(0);
@@ -47,6 +48,7 @@ public class QuickSlotSystem : MonoBehaviour
         OnQuickSlotsChanged?.Invoke();
     }
 
+    // Use the item in the specified quick slot index, applying its effect and consuming it if it's a consumable. If the item is not in the inventory, clear the slot.
     public void UseQuickSlot(int slotIndex)
     {
         string itemName = quickSlots[slotIndex];
@@ -81,6 +83,7 @@ public class QuickSlotSystem : MonoBehaviour
         OnQuickSlotsChanged?.Invoke();
     }
 
+    // Apply the effect of the item based on its name. This is a simple hardcoded mapping for demonstration purposes.
     private void ApplyItemEffect(string itemName)
     {
         if (itemName == "Health10") playerHealth.Heal(10);

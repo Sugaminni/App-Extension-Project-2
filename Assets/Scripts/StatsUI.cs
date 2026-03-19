@@ -35,6 +35,7 @@ public class StatsUI : MonoBehaviour
         UpdateStatsText();
     }
 
+    // Update the stats text with current player stats
     private void UpdateStatsText()
     {
         if (statsText == null)
