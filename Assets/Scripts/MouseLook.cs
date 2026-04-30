@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class PlayerLook : MonoBehaviour
+public class MouseLook : MonoBehaviour
 {
     public Transform cameraPivot;
     public float mouseSensitivity = 100f;
@@ -11,26 +11,23 @@ public class PlayerLook : MonoBehaviour
     private void Start()
     {
         inventoryUI = FindObjectOfType<InventoryUIController>();
-
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
     }
 
     private void Update()
     {
-        if (inventoryUI != null && inventoryUI.IsOpen)
+        if (CursorManager.IsUIOpen)
             return;
 
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
+        if (inventoryUI != null && inventoryUI.IsOpen())
+            return;
 
-        // Vertical (look up/down)
+        float mouseX = Input.GetAxisRaw("Mouse X") * mouseSensitivity * Time.deltaTime;
+        float mouseY = Input.GetAxisRaw("Mouse Y") * mouseSensitivity * Time.deltaTime;
+
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, -80f, 80f);
 
         cameraPivot.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
-
-        // Horizontal (turn player)
         transform.Rotate(Vector3.up * mouseX);
     }
 }

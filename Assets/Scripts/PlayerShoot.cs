@@ -12,12 +12,15 @@ public class PlayerShoot : MonoBehaviour
     public float shootCooldown = 0.3f;
     public Vector3 shootOffset = new Vector3(0f, -0.8f, 0.5f);
 
+    [Header("Audio")]
+    public AudioSource shootAudioSource;
+    public AudioClip shootSound;
+
     private GameObject currentBulletPrefab;
     private float nextShootTime;
 
     private void Start()
     {
-        // Default bullet type
         currentBulletPrefab = redBulletPrefab;
 
         if (PlayerStats.Instance != null)
@@ -29,6 +32,9 @@ public class PlayerShoot : MonoBehaviour
 
     private void Update()
     {
+        if (CursorManager.IsUIOpen)
+            return;
+
         if (Input.GetMouseButton(0) && Time.time >= nextShootTime)
         {
             nextShootTime = Time.time + shootCooldown;
@@ -36,10 +42,10 @@ public class PlayerShoot : MonoBehaviour
         }
     }
 
-    // Simple shoot method that spawns a bullet and gives it velocity
     private void Shoot()
     {
-        if (currentBulletPrefab == null) return;
+        if (currentBulletPrefab == null)
+            return;
 
         Vector3 spawnPos = transform.TransformPoint(shootOffset);
         GameObject bullet = Instantiate(currentBulletPrefab, spawnPos, Quaternion.identity);
@@ -56,9 +62,18 @@ public class PlayerShoot : MonoBehaviour
             Vector3 dir = transform.forward;
             rb.linearVelocity = dir * bulletSpeed;
         }
+
+        PlayShootSound();
     }
 
-    // Switch the currently equipped bullet type
+    private void PlayShootSound()
+    {
+        if (shootAudioSource == null || shootSound == null)
+            return;
+
+        shootAudioSource.PlayOneShot(shootSound);
+    }
+
     public void SetBulletType(string bulletName)
     {
         switch (bulletName)
@@ -96,10 +111,13 @@ public class PlayerShoot : MonoBehaviour
         {
             case "RedBullet":
                 return 10f;
+
             case "GreenBullet":
                 return 20f;
+
             case "BlueBullet":
                 return 30f;
+
             default:
                 return 10f;
         }

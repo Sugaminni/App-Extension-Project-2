@@ -1,71 +1,52 @@
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
+using TMPro;
 
 public class QuickSlotUI : MonoBehaviour
 {
-    [SerializeField] private TMP_Text label;
-    [SerializeField] private int slotIndex;
-
-    private QuickSlotSystem quickSlotSystem;
-    private InventorySystem inventorySystem;
-    private Button button;
+    [SerializeField] private QuickSlotSystem quickSlotSystem;
+    [SerializeField] private TMP_Text[] slotTexts;
 
     private void Awake()
     {
-        quickSlotSystem = FindObjectOfType<QuickSlotSystem>();
-        inventorySystem = FindObjectOfType<InventorySystem>();
-        button = GetComponent<Button>();
-
-        if (button != null)
-        {
-            button.onClick.AddListener(OnClicked);
-        }
+        if (quickSlotSystem == null)
+            quickSlotSystem = FindObjectOfType<QuickSlotSystem>();
     }
 
     private void OnEnable()
     {
         if (quickSlotSystem != null)
-            quickSlotSystem.OnQuickSlotsChanged += Refresh;
+            quickSlotSystem.OnQuickSlotsChanged += RefreshUI;
 
-        if (inventorySystem != null)
-            inventorySystem.OnInventoryChanged += Refresh;
+        RefreshUI();
     }
 
     private void OnDisable()
     {
         if (quickSlotSystem != null)
-            quickSlotSystem.OnQuickSlotsChanged -= Refresh;
-
-        if (inventorySystem != null)
-            inventorySystem.OnInventoryChanged -= Refresh;
+            quickSlotSystem.OnQuickSlotsChanged -= RefreshUI;
     }
 
-    private void Start()
+    public void RefreshUI()
     {
-        Refresh();
-    }
-
-    private void OnClicked()
-    {
-        if (quickSlotSystem == null)
+        if (quickSlotSystem == null || slotTexts == null)
             return;
 
-        quickSlotSystem.SelectSlot(slotIndex);
-        Debug.Log("Clicked quick slot " + (slotIndex + 1));
-    }
+        for (int i = 0; i < slotTexts.Length; i++)
+        {
+            if (slotTexts[i] == null)
+                continue;
 
-    public void Refresh()
-    {
-        if (label == null || quickSlotSystem == null)
-            return;
+            string itemName = quickSlotSystem.GetItemInSlot(i);
+            int quantity = quickSlotSystem.GetQuantityInSlot(i);
 
-        string itemName = quickSlotSystem.GetItemInSlot(slotIndex);
-        int quantity = quickSlotSystem.GetQuantityInSlot(slotIndex);
-
-        if (string.IsNullOrEmpty(itemName) || quantity <= 0)
-            label.text = "Slot " + (slotIndex + 1);
-        else
-            label.text = itemName + " x" + quantity;
+            if (string.IsNullOrEmpty(itemName))
+            {
+                slotTexts[i].text = "Slot " + (i + 1) + "\nEmpty";
+            }
+            else
+            {
+                slotTexts[i].text = "Slot " + (i + 1) + "\n" + itemName + " x" + quantity;
+            }
+        }
     }
 }

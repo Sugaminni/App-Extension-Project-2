@@ -1,85 +1,78 @@
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class InventorySlotUI : MonoBehaviour
 {
-    public TMP_Text label;
-    public Button button;
+    [Header("UI")]
+    [SerializeField] private TMP_Text itemText;
+    [SerializeField] private Button button;
 
-    private string currentItemName;
-    private bool isEmpty = true;
-    private InventoryUIController inventoryUI;
+    private string itemName;
+    private InventoryUIController inventoryUIController;
 
     private void Awake()
     {
-        if (inventoryUI == null)
-            inventoryUI = FindObjectOfType<InventoryUIController>();
+        inventoryUIController = FindObjectOfType<InventoryUIController>();
 
         if (button == null)
             button = GetComponent<Button>();
 
-        if (button != null)
-        {
-            button.onClick.RemoveAllListeners();
-            button.onClick.AddListener(OnSlotClicked);
-        }
-    }
-
-    // Initialize the inventory slot with a reference to the InventoryUIController, and set up the button click listener
-    public void Initialize(InventoryUIController controller)
-    {
-        inventoryUI = controller;
-
-        if (button == null)
-            button = GetComponent<Button>();
+        if (itemText == null)
+            itemText = GetComponentInChildren<TMP_Text>();
 
         if (button != null)
         {
-            button.onClick.RemoveAllListeners();
-            button.onClick.AddListener(OnSlotClicked);
+            button.onClick.RemoveListener(ClickSlot);
+            button.onClick.AddListener(ClickSlot);
+        }
+        else
+        {
+            Debug.LogWarning(gameObject.name + " has no Button component.");
         }
     }
 
-    // Set the inventory slot to an empty state, clearing any item information and making it non-interactable
-    public void SetEmpty()
+    public void SetItem(string newItemName, int quantity)
     {
-        isEmpty = true;
-        currentItemName = null;
+        itemName = newItemName;
 
-        if (label != null)
-            label.text = "Empty";
-
-        if (button != null)
-            button.interactable = false;
-    }
-
-    // Set the inventory slot to display a specific item and quantity, and make it interactable
-    public void SetItem(string itemName, int qty)
-    {
-        isEmpty = false;
-        currentItemName = itemName;
-
-        if (label != null)
-            label.text = $"{itemName} x{qty}";
+        if (itemText != null)
+            itemText.text = newItemName + " x" + quantity;
 
         if (button != null)
             button.interactable = true;
     }
 
-    // Called when the inventory slot button is clicked. If the slot is not empty, it will notify the InventoryUIController to assign this item to the currently selected quick slot.
-    private void OnSlotClicked()
+    public void SetEmpty()
     {
-        if (isEmpty || string.IsNullOrEmpty(currentItemName))
-            return;
+        itemName = "";
 
-        if (inventoryUI == null)
+        if (itemText != null)
+            itemText.text = "Empty";
+
+        if (button != null)
+            button.interactable = false;
+    }
+
+    private void ClickSlot()
+    {
+        if (string.IsNullOrEmpty(itemName))
         {
-            Debug.LogError("InventorySlotUI: inventoryUI is null on " + gameObject.name);
+            Debug.LogWarning("Clicked empty slot.");
             return;
         }
 
-        Debug.Log("Clicked inventory item -> " + currentItemName);
-        inventoryUI.OnInventoryItemClicked(currentItemName);
+        if (inventoryUIController == null)
+            inventoryUIController = FindObjectOfType<InventoryUIController>();
+
+        if (inventoryUIController != null)
+        {
+            Debug.Log("Clicked inventory slot: " + itemName);
+            inventoryUIController.OnInventoryItemClicked(itemName);
+        }
+        else
+        {
+            Debug.LogError("InventoryUIController not found.");
+        }
     }
 }

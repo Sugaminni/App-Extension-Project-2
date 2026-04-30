@@ -2,16 +2,33 @@ using UnityEngine;
 
 public class InventoryUIController : MonoBehaviour
 {
+    public static InventoryUIController Instance;
+
     [SerializeField] private GameObject inventoryPanel;
     [SerializeField] private InventorySlotUI[] inventorySlots;
 
-    private InventorySystem inventorySystem;
-    private QuickSlotSystem quickSlotSystem;
+    [Header("Input")]
+    [SerializeField] private KeyCode inventoryKey = KeyCode.I;
+    [SerializeField] private float toggleCooldown = 0.25f;
 
-    public bool IsOpen => inventoryPanel != null && inventoryPanel.activeSelf;
+    private InventorySystem inventorySystem;
+    [SerializeField] private QuickSlotSystem quickSlotSystem;
+
+    private string selectedItemName;
+    private float nextToggleTime = 0f;
 
     private void Awake()
     {
+        // Prevent duplicate InventoryUIControllers from both toggling.
+        if (Instance != null && Instance != this)
+        {
+            Debug.LogWarning("Duplicate InventoryUIController found and disabled on: " + gameObject.name);
+            enabled = false;
+            return;
+        }
+
+        Instance = this;
+
         inventorySystem = FindObjectOfType<InventorySystem>();
         quickSlotSystem = FindObjectOfType<QuickSlotSystem>();
 
@@ -33,58 +50,135 @@ public class InventoryUIController : MonoBehaviour
         if (inventoryPanel != null)
             inventoryPanel.SetActive(false);
 
-        SetCursorState(false);
         RefreshInventoryUI();
     }
 
     private void OnDestroy()
     {
+        if (Instance == this)
+            Instance = null;
+
         if (inventorySystem != null)
             inventorySystem.OnInventoryChanged -= RefreshInventoryUI;
     }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.I))
+        if (Input.GetKeyDown(inventoryKey) && Time.time >= nextToggleTime)
         {
+            nextToggleTime = Time.time + toggleCooldown;
+
+            Debug.Log("Inventory key pressed by: " + gameObject.name);
             ToggleInventory();
         }
     }
 
-    // Toggle the inventory panel and cursor state, and refresh UI if opening
+    public bool IsOpen()
+    {
+        return inventoryPanel != null && inventoryPanel.activeSelf;
+    }
+
     public void ToggleInventory()
+    {
+        if (inventoryPanel == null)
+        {
+            Debug.LogWarning("Inventory panel is not assigned.");
+            return;
+        }
+
+        bool nextState = !inventoryPanel.activeSelf;
+
+        inventoryPanel.SetActive(nextState);
+
+        if (nextState)
+        {
+            CursorManager.SetUIMode();
+            RefreshInventoryUI();
+            Debug.Log("Inventory opened.");
+        }
+        else
+        {
+            CursorManager.SetGameplayMode();
+            Debug.Log("Inventory closed.");
+        }
+    }
+
+    public void OpenInventory()
     {
         if (inventoryPanel == null)
             return;
 
-        bool nextState = !inventoryPanel.activeSelf;
-        inventoryPanel.SetActive(nextState);
-        SetCursorState(nextState);
+        if (inventoryPanel.activeSelf)
+            return;
 
-        if (nextState)
-            RefreshInventoryUI();
+        inventoryPanel.SetActive(true);
+        CursorManager.SetUIMode();
+        RefreshInventoryUI();
+
+        Debug.Log("Inventory opened.");
     }
 
-    private void SetCursorState(bool inventoryOpen)
+    public void CloseInventory()
     {
-        Cursor.visible = inventoryOpen;
-        Cursor.lockState = inventoryOpen ? CursorLockMode.None : CursorLockMode.Locked;
+        if (inventoryPanel == null)
+            return;
+
+        if (!inventoryPanel.activeSelf)
+            return;
+
+        inventoryPanel.SetActive(false);
+        CursorManager.SetGameplayMode();
+
+        Debug.Log("Inventory closed.");
     }
 
-    // Called by InventorySlotUI when an item is clicked, to assign it to the currently selected quick slot
     public void OnInventoryItemClicked(string itemName)
     {
+        selectedItemName = itemName;
+        Debug.Log("Selected item: " + selectedItemName);
+    }
+
+    public void AssignSelectedToSlot1()
+    {
+        AssignSelectedToSlot(0);
+    }
+
+    public void AssignSelectedToSlot2()
+    {
+        AssignSelectedToSlot(1);
+    }
+
+    public void AssignSelectedToSlot3()
+    {
+        AssignSelectedToSlot(2);
+    }
+
+    public void AssignSelectedToSlot4()
+    {
+        AssignSelectedToSlot(3);
+    }
+
+    private void AssignSelectedToSlot(int slotIndex)
+    {
+        Debug.Log("Trying to assign item: " + selectedItemName + " to slot " + (slotIndex + 1));
+
         if (quickSlotSystem == null)
         {
             Debug.LogError("QuickSlotSystem missing.");
             return;
         }
 
-        Debug.Log("ASSIGN ITEM -> " + itemName + " INTO SLOT " + (quickSlotSystem.SelectedSlotIndex + 1));
-        quickSlotSystem.AssignToSelectedSlot(itemName);
+        if (string.IsNullOrEmpty(selectedItemName))
+        {
+            Debug.LogWarning("No inventory item selected.");
+            return;
+        }
+
+        quickSlotSystem.AssignToSlot(slotIndex, selectedItemName);
+
+        Debug.Log("Assign call completed.");
     }
 
-    // Refresh the inventory UI to show current items and quantities, and adjust visible slots based on unique item count
     public void RefreshInventoryUI()
     {
         if (inventorySystem == null || inventorySlots == null || inventorySlots.Length == 0)
